@@ -1,16 +1,21 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class UserBase(BaseModel):
-    name: str
+    username: str
     email: EmailStr
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
     password: str
 
-class UserUpdate(UserBase):
-    password: str | None = None
-    is_active: bool | None = None
-    is_admin: bool | None = None
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
 
 class UserInDB(UserBase):
     id: int
@@ -18,6 +23,11 @@ class UserInDB(UserBase):
     is_admin: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
+class UserOut(UserBase):
+    id: int
+    is_active: bool
 
+    class Config:
+        from_attributes = True

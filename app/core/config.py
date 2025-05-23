@@ -1,10 +1,10 @@
-from pydantic import BaseSettings, PostgresDsn
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    DATABASE_URL: PostgresDsn
+    DATABASE_URL: str  
+    DATABASE_URL_SYNC: str  
 
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
 
 settings = Settings()

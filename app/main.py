@@ -8,4 +8,3 @@ async def root():
     return {"message": "API Funcionando!"}
 
 app.include_router(api_router)
-
