@@ -4,6 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from app.schemas.user import UserCreate, UserOut
 from app.db.session import get_db
 from app.crud.user import crud_user
+from fastapi.security import OAuth2PasswordRequestForm
+from app.core.security import verify_password, create_access_token
+from datetime import timedelta
+
 
 router = APIRouter()
 
@@ -26,3 +30,34 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email já registrado"
         )
+
+@router.post("/login")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),  
+    db: AsyncSession = Depends(get_db)  
+):
+    
+    user = await crud_user.get_by_email(db, email=form_data.username)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário ou senha incorretos"
+        )
+    
+    
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário ou senha incorretos"
+        )
+    
+    
+    access_token_expires = timedelta(minutes=30)  
+    access_token = create_access_token(
+        data={"sub": user.email},  
+        expires_delta=access_token_expires
+    )
+    
+    
+    return {"access_token": access_token, "token_type": "bearer"}
