@@ -7,9 +7,13 @@ from app.crud.user import crud_user
 from fastapi.security import OAuth2PasswordRequestForm
 from app.core.security import verify_password, create_access_token
 from datetime import timedelta
+from app.db.models.user import User
+from app.schemas.user import UserOut
+from app.core.dependencies import get_current_user
 
 
 router = APIRouter()
+
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -58,11 +62,9 @@ async def login(
         data={"sub": user.email},  
         expires_delta=access_token_expires
     )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=UserOut)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
-
-    
-    
-    return {"access_token": access_token, "token_type": "bearer"}
