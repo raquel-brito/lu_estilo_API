@@ -1,8 +1,8 @@
-"""create users table
+"""create clients table
 
-Revision ID: 2ec7eb25b7a8
-Revises: f1a461052aae
-Create Date: 2025-05-23 04:51:58.507237
+Revision ID: 8ce0d559912d
+Revises: ce6f2ddf338d
+Create Date: 2025-05-25 00:16:15.806015
 
 """
 from typing import Sequence, Union
@@ -12,11 +12,10 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2ec7eb25b7a8'
-down_revision: Union[str, None] = 'f1a461052aae'
+revision: str = '8ce0d559912d'
+down_revision: Union[str, None] = 'ce6f2ddf338d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.create_table(
@@ -25,7 +24,8 @@ def upgrade() -> None:
         sa.Column('name', sa.String(length=100), nullable=False),
         sa.Column('email', sa.String(length=100), nullable=False, unique=True),
         sa.Column('cpf', sa.String(length=14), nullable=True),
+        # adicione outras colunas que você precisa
     )
 
 def downgrade() -> None:
-    pass
+    op.drop_table('clients')

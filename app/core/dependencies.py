@@ -2,13 +2,11 @@ from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import JWTError, jwt
 
-
 from app.core.config import settings  
 from app.db.session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.user import User
 from sqlalchemy.future import select
-
 
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY  
@@ -38,7 +36,6 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-   
     for scope in security_scopes.scopes:
         if scope not in token_scopes:
             raise HTTPException(
@@ -54,3 +51,17 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+async def get_current_active_user(
+    current_user: User = Security(get_current_user, scopes=[])
+) -> User:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Usuário inativo")
+    return current_user
+
+async def get_current_active_admin(
+    current_user: User = Security(get_current_user, scopes=["admin"])
+) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permissão de admin necessária")
+    return current_user

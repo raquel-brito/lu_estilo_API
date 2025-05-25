@@ -1,8 +1,8 @@
-"""create users table
+"""create clients table with columns
 
-Revision ID: 2ec7eb25b7a8
-Revises: f1a461052aae
-Create Date: 2025-05-23 04:51:58.507237
+Revision ID: 2dea61502725
+Revises: 8ce0d559912d
+Create Date: 2025-05-25 00:24:02.865010
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2ec7eb25b7a8'
-down_revision: Union[str, None] = 'f1a461052aae'
+revision: str = '2dea61502725'
+down_revision: Union[str, None] = '8ce0d559912d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -28,4 +28,5 @@ def upgrade() -> None:
     )
 
 def downgrade() -> None:
+    """Downgrade schema."""
     pass

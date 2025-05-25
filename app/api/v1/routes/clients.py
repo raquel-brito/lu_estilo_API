@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Security
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from typing import List, Optional
 
 from app.core.dependencies import get_db, get_current_user
 from app.db.models.user import User
 from app.schemas.client import ClientCreate, ClientOut, ClientUpdate
 from app.crud import clients as crud_clients
+
 
 router = APIRouter()
 
@@ -24,7 +26,7 @@ async def list_clients(
     return await crud_clients.get_clients(db, skip, limit, name, email)
 
 
-@router.post("/clients/", response_model=ClientOut)
+@router.post("/", response_model=ClientOut)
 async def create_client(
     client_in: ClientCreate,
     db: AsyncSession = Depends(get_db),
@@ -47,7 +49,7 @@ async def get_client(
 ):
     client = await crud_clients.get_client_by_id(db, id)
     if not client:
-        raise HTTPException(status_code=404, detail="Client não encontrado")
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
     return client
 
 
@@ -61,7 +63,7 @@ async def update_client(
 ):
     client = await crud_clients.get_client_by_id(db, id)
     if not client:
-        raise HTTPException(status_code=404, detail="Client não encontrado")
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
     if client.email != client_in.email:
         if await crud_clients.get_client_by_email(db, client_in.email):
