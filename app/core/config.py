@@ -6,8 +6,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str  
     DATABASE_URL_SYNC: str  
     SECRET_KEY: str  
+    admin_email: str      
+    admin_password: str   
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
+# 
