@@ -1,18 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Security
 from sqlalchemy.orm import Session
-from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import List, Optional
 
 from app.core.dependencies import get_db, get_current_user
-from app.db.models.client import Client
-from app.schemas.client import ClientCreate, ClientOut, ClientUpdate
 from app.db.models.user import User
-
+from app.schemas.client import ClientCreate, ClientOut, ClientUpdate
+from app.crud import clients as crud_clients
 
 router = APIRouter()
 
-# GET /clients com paginação e filtros
+
 @router.get("/", response_model=List[ClientOut])
 async def list_clients(
     *,
@@ -23,39 +21,23 @@ async def list_clients(
     name: Optional[str] = Query(None, alias="nome"),
     email: Optional[str] = Query(None),
 ):
-    query = db.query(Client)
-
-    if name:
-        query = query.filter(Client.name.ilike(f"%{name}%"))
-    if email:
-        query = query.filter(Client.email.ilike(f"%{email}%"))
-
-    clients = query.offset(skip).limit(limit).all()
-    return clients
+    return await crud_clients.get_clients(db, skip, limit, name, email)
 
 
-# POST /clients - criar novo cliente com validação email e CPF únicos
 @router.post("/clients/", response_model=ClientOut)
 async def create_client(
     client_in: ClientCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Security(get_current_user, scopes=["admin"])
 ):
-    # verifica email único
-    if db.query(Client).filter(Client.email == client_in.email).first():
+    if await crud_clients.get_client_by_email(db, client_in.email):
         raise HTTPException(status_code=400, detail="Email já registrado")
-    # verifica CPF único
-    if db.query(Client).filter(Client.cpf == client_in.cpf).first():
+    if await crud_clients.get_client_by_cpf(db, client_in.cpf):
         raise HTTPException(status_code=400, detail="CPF já registrado")
 
-    client = Client(**client_in.dict())
-    db.add(client)
-    db.commit()
-    db.refresh(client)
-    return client
+    return await crud_clients.create_client(db, client_in)
 
 
-# GET /clients/{id} - obter cliente por id
 @router.get("/{id}", response_model=ClientOut)
 async def get_client(
     *,
@@ -63,13 +45,12 @@ async def get_client(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    client = db.query(Client).filter(Client.id == id).first()
+    client = await crud_clients.get_client_by_id(db, id)
     if not client:
         raise HTTPException(status_code=404, detail="Client não encontrado")
     return client
 
 
-# PUT /clients/{id} - atualizar cliente por id
 @router.put("/{id}", response_model=ClientOut)
 async def update_client(
     *,
@@ -78,27 +59,20 @@ async def update_client(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    client = db.query(Client).filter(Client.id == id).first()
+    client = await crud_clients.get_client_by_id(db, id)
     if not client:
         raise HTTPException(status_code=404, detail="Client não encontrado")
 
-    # valida email e cpf únicos, ignorando o próprio cliente atualizado
     if client.email != client_in.email:
-        if db.query(Client).filter(Client.email == client_in.email).first():
+        if await crud_clients.get_client_by_email(db, client_in.email):
             raise HTTPException(status_code=400, detail="Email já registrado")
     if client.cpf != client_in.cpf:
-        if db.query(Client).filter(Client.cpf == client_in.cpf).first():
+        if await crud_clients.get_client_by_cpf(db, client_in.cpf):
             raise HTTPException(status_code=400, detail="CPF já registrado")
 
-    for key, value in client_in.dict(exclude_unset=True).items():
-        setattr(client, key, value)
-
-    db.commit()
-    db.refresh(client)
-    return client
+    return await crud_clients.update_client(db, client, client_in)
 
 
-# DELETE /clients/{id} - excluir cliente por id
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_client(
     *,
@@ -106,10 +80,8 @@ async def delete_client(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    client = db.query(Client).filter(Client.id == id).first()
+    client = await crud_clients.get_client_by_id(db, id)
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
-    db.delete(client)
-    db.commit()
-    return
+    await crud_clients.delete_client(db, client)
