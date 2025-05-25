@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Security
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 from app.core.config import settings
 from app.core.dependencies import get_current_user
 from app.core.security import verify_password, create_access_token
+from app.core.security import get_password_hash as hash_password
 from app.crud.user import crud_user
 from app.db.models.user import User
 from app.db.session import get_db
@@ -54,9 +55,10 @@ async def login(
 
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(
-        data={"sub": user.email},
+        data={"sub": user.email, "scopes": ["admin"] if user.is_admin else []},
         expires_delta=access_token_expires
-    )
+)
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -82,3 +84,23 @@ async def refresh_token(request: Request):
 @router.get("/me", response_model=UserOut)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.post("/users/", response_model=UserOut)
+async def create_user(
+    user_in: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Security(get_current_user, scopes=["admin"])
+):
+    existing_user = await crud_user.get_by_email(db, email=user_in.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email já registrado")
+
+    user_data = user_in.dict()
+    user_data["hashed_password"] = hash_password(user_data.pop("password"))
+
+    new_user = User(**user_data)
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    return new_user
