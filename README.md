@@ -139,6 +139,18 @@ Acesse a documentação da API em [http://localhost:8000/docs](http://localhost:
 - Descrições detalhadas das regras de negócio
 
 ---
+## 🖥️ Página de Teste Interativa
+
+Inclui uma página `index.html` para testar rapidamente o fluxo de login, cadastro e visualização do perfil do usuário autenticado.
+
+**Como usar:**
+1. Rode a API localmente.
+2. Abra o arquivo `index.html` no navegador.
+3. Cadastre-se, faça login e clique em "Ver Meu Perfil" para ver seus dados.
+
+> A página faz requisições para `http://localhost:8000`. Certifique-se de que o backend está ativo e o CORS habilitado.
+
+---
 
 ## 🧪 Testes
 
