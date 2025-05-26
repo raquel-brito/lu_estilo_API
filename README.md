@@ -1,5 +1,13 @@
 # 🛠️ Teste Técnico Back-End - Lu Estilo API
 
+> 💡 **Acesse a API agora:**
+>
+> - **Produção (Fly.io):** [https://lu-estilo-api-misty-frost-2101.fly.dev/docs](https://lu-estilo-api-misty-frost-2101.fly.dev/docs)
+> - **Docker local:** [http://localhost:8000/docs](http://localhost:8000/docs)
+> - **Ambiente local (sem Docker):** [http://localhost:8000/docs](http://localhost:8000/docs)
+>
+> Você pode testar todos os endpoints e a documentação Swagger em qualquer ambiente acima!
+
 Bem-vindo ao repositório do desafio técnico para a Lu Estilo!  
 Aqui você encontra uma API RESTful robusta, moderna e pronta para produção, desenvolvida em **Python** com **FastAPI**, **PostgreSQL** e **Docker**.
 
@@ -179,7 +187,16 @@ Mais informações: [https://sentry.io/for/python/](https://sentry.io/for/python
 
 ---
 
+## 🌍 Deploy no Fly.io
+A API também está disponível em produção via [Fly.io](https://fly.io/).
 
+- **Acesse a API em produção:**  
+  [https://lu-estilo-api-misty-frost-2101.fly.dev/docs]
+  (https://lu-estilo-api-misty-frost-2101.fly.dev/docs)
+
+Você pode testar todos os endpoints e a documentação Swagger diretamente nesse ambiente, sem necessidade de rodar localmente.
+
+> **Observação:** O ambiente de produção pode ter dados de demonstração e ser reiniciado periodicamente.
 
 ---
 
