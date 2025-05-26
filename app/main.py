@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from app.api.v1.routes import api_router
 from app.startup import create_initial_admin
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Lu Estilo API")
 
@@ -24,12 +25,9 @@ app.add_middleware(
 
 app.add_middleware(SentryAsgiMiddleware)
 
-
-@app.get("/")
-async def root():
-    return {"message": "API Funcionando!"}
-
 app.include_router(api_router, prefix="/api/v1")
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 @app.on_event("startup")
 async def startup_event():
