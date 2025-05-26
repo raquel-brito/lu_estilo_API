@@ -10,8 +10,17 @@ sentry_sdk.init(
 from fastapi import FastAPI
 from app.api.v1.routes import api_router
 from app.startup import create_initial_admin
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Lu Estilo API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(SentryAsgiMiddleware)
 
