@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     username: str = Field(..., example="usuario1")
     email: EmailStr = Field(..., example="usuario1@teste.com")
     password: str = Field(..., example="senha123")
+    is_admin: Optional[bool] = False
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

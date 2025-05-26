@@ -7,13 +7,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, get_current_active_admin
 from app.core.security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.security import get_password_hash as hash_password
 from app.crud.user import crud_user
 from app.db.models.user import User
 from app.db.session import get_db
 from app.schemas.user import UserCreate, UserOut, RefreshTokenRequest
+
+
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
@@ -87,11 +89,8 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db))
 
 @router.post(
     "/login",
-    summary="Autenticar usuário",
-    description=(
-        "Realiza a autenticação do usuário. "
-        "Retorna um token JWT válido para uso nas demais rotas protegidas."
-    ),
+    summary="Login (use seu e-mail como username)",
+    description="Informe seu e-mail no campo username. Realiza a autenticação do usuário e retorna um token JWT válido para uso nas demais rotas protegidas.",
     responses={
         200: {
             "description": "Login realizado com sucesso",
@@ -254,3 +253,25 @@ async def refresh_token(request_data: RefreshTokenRequest):
 )
 async def read_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.post(
+    "/register-admin",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar novo admin",
+    description="Permite que um admin crie outro usuário admin.",
+)
+async def register_admin(
+    user_in: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_active_admin),
+):
+    existing_user = await crud_user.get_by_email(db, email=user_in.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email já registrado"
+        )
+    user_in.is_admin = True
+    user = await crud_user.create(db, user_in=user_in)
+    return user
