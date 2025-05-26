@@ -1,8 +1,9 @@
 import sentry_sdk
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+import os
 
 sentry_sdk.init(
-    dsn="https://80339ee9bb46069fe6e11337f4279ff8@o4509382887538688.ingest.us.sentry.io/4509382907592704",
+    dsn=os.getenv("SENTRY_DSN"),
     traces_sample_rate=1.0  # Ajuste a taxa de amostragem conforme necessário
 )
 

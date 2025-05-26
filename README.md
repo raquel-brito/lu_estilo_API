@@ -145,6 +145,13 @@ Acesse a documentação da API em [http://localhost:8000/docs](http://localhost:
 - Testes unitários e de integração com **Pytest**
 - Cobertura dos principais fluxos de negócio
 
+A aplicação está preparada para integração com o **Sentry**, permitindo o monitoramento centralizado de erros e exceções em produção.
+
+- Basta configurar a variável de ambiente `SENTRY_DSN` no arquivo `.env` com o seu DSN do Sentry.
+- Com isso, qualquer erro crítico será automaticamente reportado para o painel do Sentry, facilitando a identificação e correção de problemas.
+
+Mais informações: [https://sentry.io/for/python/](https://sentry.io/for/python/)
+
 ---
 
 ## 🚀 Deploy com Docker

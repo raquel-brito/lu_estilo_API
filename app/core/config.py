@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     admin_password: str   
     WHATSAPP_INSTANCE_ID: str
     WHATSAPP_TOKEN: str
-
+    sentry_dsn: str | None = None
     class Config:
         env_file = ".env"
 
