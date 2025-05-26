@@ -2,9 +2,9 @@
 
 > 💡 **Acesse a API agora:**
 >
-> - **Produção (Fly.io):** [https://lu-estilo-api-misty-frost-2101.fly.dev/docs](https://lu-estilo-api-misty-frost-2101.fly.dev/docs)
-> - **Docker local:** [http://localhost:8000/docs](http://localhost:8000/docs)
-> - **Ambiente local (sem Docker):** [http://localhost:8000/docs](http://localhost:8000/docs)
+> - **Produção (Fly.io):** [https://lu-estilo-api-misty-frost-2101.fly.dev/docs](https://lu-estilo-api-misty-frost-2101.fly.dev/)
+> - **Docker local:** [http://localhost:8000/docs](http://localhost:8000/)
+> - **Ambiente local (sem Docker):** [http://localhost:8000/docs](http://localhost:8000/)
 >
 > Você pode testar todos os endpoints e a documentação Swagger em qualquer ambiente acima!
 
@@ -192,7 +192,7 @@ A API também está disponível em produção via [Fly.io](https://fly.io/).
 
 - **Acesse a API em produção:**  
   [https://lu-estilo-api-misty-frost-2101.fly.dev/docs]
-  (https://lu-estilo-api-misty-frost-2101.fly.dev/docs)
+  (https://lu-estilo-api-misty-frost-2101.fly.dev/)
 
 Você pode testar todos os endpoints e a documentação Swagger diretamente nesse ambiente, sem necessidade de rodar localmente.
 
