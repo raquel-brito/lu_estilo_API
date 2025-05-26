@@ -214,7 +214,6 @@ Veja o arquivo `.env.example` para todos os parâmetros necessários.
 
 ---
 
-> Dúvidas ou sugestões? Abra uma issue ou entre em contato!
 ## Autor
 
 Desenvolvido por [Raquel](https://github.com/raquel-brito).
