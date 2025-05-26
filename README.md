@@ -1,253 +1,220 @@
-# Lu Estilo API
+# 🛠️ Teste Técnico Back-End - Lu Estilo API
 
-API RESTful desenvolvida para a Lu Estilo, empresa de confecção, com o objetivo de facilitar a comunicação entre o time comercial, clientes e a empresa, além de permitir automação de mensagens via WhatsApp em eventos comerciais.
-
----
-
-## Índice
-
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Funcionalidades](#funcionalidades)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Como Executar](#como-executar)
-  - [Pré-requisitos](#pré-requisitos)
-  - [Configuração do Ambiente](#configuração-do-ambiente)
-  - [Rodando com Docker](#rodando-com-docker)
-  - [Rodando Localmente (sem Docker)](#rodando-localmente-sem-docker)
-- [Acesso Admin Padrão](#acesso-admin-padrão)
-- [Documentação da API](#documentação-da-api)
-- [Testes](#testes)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Variáveis de Ambiente](#variáveis-de-ambiente)
-- [Observações](#observações)
-- [Autor](#autor)
+Bem-vindo ao repositório do desafio técnico para a Lu Estilo!  
+Aqui você encontra uma API RESTful robusta, moderna e pronta para produção, desenvolvida em **Python** com **FastAPI**, **PostgreSQL** e **Docker**.
 
 ---
 
-## Sobre o Projeto
+## 👤 Acesso Admin
 
-Esta API foi desenvolvida como parte de um desafio técnico para a Lu Estilo.  
-Ela permite o gerenciamento de clientes, produtos, pedidos e integrações automáticas com WhatsApp para notificações comerciais.
+> **Atenção:** O sistema já inicia com um usuário **admin** padrão para facilitar testes e avaliação.
+>
+> - **Email:** admin@luestilo.com  
+> - **Senha:** admin123  
+>
+> Você pode alterar esses dados via variáveis de ambiente (`ADMIN_EMAIL`, `ADMIN_PASSWORD`).  
+> Apenas admins podem criar outros admins e têm acesso total a todos os recursos.
 
 ---
 
-## Funcionalidades
+## 📌 Descrição do Desafio
+
+A Lu Estilo, empresa de confecção, busca novas oportunidades de negócio e precisa de uma API para facilitar a comunicação entre o time comercial, clientes e a empresa.  
+O objetivo é criar uma API RESTful para gerenciar clientes, produtos e pedidos, além de integrar notificações automáticas via WhatsApp.
+
+---
+
+## 🎯 Funcionalidades
 
 - **Autenticação JWT** (login, registro, refresh token)
-- **Gerenciamento de Clientes** (CRUD, filtros, validação de CPF/email)
-- **Gerenciamento de Produtos** (CRUD, filtros por categoria, preço, disponibilidade)
-- **Pedidos** (CRUD, múltiplos produtos por pedido, validação de estoque, filtros avançados)
-- **Níveis de acesso** (usuário comum e admin)
-- **Envio automático de mensagens WhatsApp** para clientes em eventos comerciais (ex: novo pedido)
-- **Documentação automática** via Swagger/OpenAPI
-- **Testes unitários e de integração** com Pytest
+- **Níveis de acesso:** admin e usuário comum
+- **CRUD completo:** clientes, produtos, pedidos
+- **Validação de dados:** email e CPF únicos, estoque, filtros avançados
+- **Envio automático de mensagens WhatsApp** (UltraMsg API) em eventos comerciais
+- **Documentação automática** (Swagger/OpenAPI)
+- **Testes unitários e de integração** (Pytest)
 - **Deploy fácil com Docker**
 
 ---
 
-## Tecnologias Utilizadas
+## 🔒 Autenticação e Autorização
 
-- [Python 3.11+](https://www.python.org/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [SQLAlchemy](https://www.sqlalchemy.org/)
-- [PostgreSQL](https://www.postgresql.org/)
-- [Alembic](https://alembic.sqlalchemy.org/)
-- [Pytest](https://docs.pytest.org/)
-- [Docker](https://www.docker.com/)
-- [UltraMsg API](https://ultramsg.com/) (WhatsApp)
-- [Sentry](https://sentry.io/) (monitoramento de erros)
+- JWT para autenticação
+- Rotas protegidas para clientes, produtos e pedidos
+- **Admin:** pode criar, editar e excluir qualquer recurso, além de criar outros admins
+- **Usuário Comum (Autenticado):** pode realizar pedidos, consultar seus próprios pedidos e produtos disponíveis 
 
 ---
 
-## Como Executar
+## 🛣️ Endpoints Principais
 
-### Pré-requisitos
+### 🔹 Autenticação
+- `POST /auth/login` – Login (use seu e-mail como username)
+- `POST /auth/register` – Registro de novo usuário
+- `POST /auth/refresh-token` – Renovação de token JWT
 
-- Docker e Docker Compose **ou** Python 3.11+, PostgreSQL local e [pipenv](https://pipenv.pypa.io/en/latest/) ou [venv](https://docs.python.org/3/library/venv.html)
+### 🔹 Clientes
+- `GET /clients` – Listar clientes (paginação, filtro por nome/email)
+- `POST /clients` – Criar cliente (validação de email e CPF únicos)
+- `GET /clients/{id}` – Obter cliente específico
+- `PUT /clients/{id}` – Atualizar cliente
+- `DELETE /clients/{id}` – Excluir cliente
 
-### Configuração do Ambiente
+### 🔹 Produtos
+- `GET /products` – Listar produtos (paginação, filtros por categoria, preço, disponibilidade)
+- `POST /products` – Criar produto (descrição, valor, código de barras, seção, estoque, validade, imagens)
+- `GET /products/{id}` – Obter produto específico
+- `PUT /products/{id}` – Atualizar produto
+- `DELETE /products/{id}` – Excluir produto
+
+### 🔹 Pedidos
+- `GET /orders` – Listar pedidos (filtros: período, seção, id, status, cliente)
+- `POST /orders` – Criar pedido (múltiplos produtos, validação de estoque)
+- `GET /orders/{id}` – Obter pedido específico
+- `PUT /orders/{id}` – Atualizar pedido (incluindo status)
+- `DELETE /orders/{id}` – Excluir pedido
+
+---
+
+## 💬 Integração WhatsApp (Desafio Extra)
+
+- Envio automático de mensagens para clientes via UltraMsg API em eventos comerciais, como:
+  - Novos pedidos realizados
+
+> As mensagens são disparadas automaticamente pela API, sem necessidade de ação manual do usuário.
+
+---
+
+## 🖥️ Rodando Localmente (sem Docker)
+
+---
 
 1. **Clone o repositório:**
    ```bash
-   git clone https://github.com/seu-usuario/lu-estilo-api.git
-   cd lu-estilo-api
+   git clone https://github.com/seu-usuario/lu_estilo_api.git
+   cd lu_estilo_api
    ```
 
-2. **Crie o arquivo `.env` na raiz do projeto:**
-   ```
-   DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/luestilo
-   SECRET_KEY=sua_chave_secreta
-   ADMIN_EMAIL=admin@luestilo.com
-   ADMIN_PASSWORD=admin123
-   WHATSAPP_INSTANCE_ID=seu_instance_id_ultramsg
-   WHATSAPP_TOKEN=seu_token_ultramsg
-   SENTRY_DSN=sua_dsn_sentry
-   ```
-
-### Rodando com Docker
-
-1. **Suba os containers:**
-   ```bash
-   docker-compose up --build
-   ```
-2. Acesse a documentação interativa em:  
-   [http://localhost:8000/docs](http://localhost:8000/docs)
-
-## 🐳 Deploy com Docker
-
-1. Certifique-se de ter o Docker e Docker Compose instalados.
-2. Crie o arquivo `.env` conforme o exemplo.
-3. Execute o comando abaixo na raiz do projeto:
-   ```bash
-   docker-compose up --build
-   ```
-4. Acesse a documentação da API em [http://localhost:8000/docs](http://localhost:8000/docs)
-
-Para parar os containers:
-```bash
-docker-compose down
-```
-
-### Rodando Localmente (sem Docker)
-
-1. **Crie e ative o ambiente virtual:**
+2. **Crie e ative o ambiente virtual:**
    ```bash
    python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate     # Windows
+   # Linux/Mac
+   source venv/bin/activate
+   # Windows
+   venv\Scripts\activate
    ```
-2. **Instale as dependências:**
+
+3. **Instale as dependências:**
    ```bash
    pip install -r requirements.txt
    ```
-3. **Configure o banco de dados e rode as migrações:**
+
+4. **Configure o banco de dados e rode as migrações:**
    ```bash
    alembic upgrade head
    ```
-4. **Execute a aplicação:**
+
+5. **Execute a aplicação:**
    ```bash
    uvicorn app.main:app --reload
    ```
 
----
-
-## 👤 Acesso Admin Padrão
-
-Na primeira vez que a aplicação for executada, um usuário admin será criado automaticamente com os seguintes dados padrão:
-
-- **Email:** admin@luestilo.com
-- **Senha:** admin123
-
-Você pode alterar esses valores usando as variáveis de ambiente:
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-
-> 🔓 Para facilitar os testes durante o processo seletivo, o sistema está com um usuário admin padrão habilitado.
+Acesse a documentação da API em [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## Documentação da API
+## 🗄️ Banco de Dados
 
-Acesse a documentação interativa (Swagger/OpenAPI) em:  
-[http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## Testes
-
-Execute os testes unitários e de integração com:
-```bash
-pytest
-```
+- **PostgreSQL** como banco relacional
+- Migrações com **Alembic**
+- Índices para performance em campos de busca
 
 ---
 
-## Estrutura do Projeto
+## 📝 Documentação da API
+
+- Documentação automática via Swagger em  
+  [http://localhost:8000/docs](http://localhost:8000/docs)
+- Exemplos de requisições e respostas para todos os endpoints
+- Descrições detalhadas das regras de negócio
+
+---
+
+## 🧪 Testes
+
+- Testes unitários e de integração com **Pytest**
+- Cobertura dos principais fluxos de negócio
+
+---
+
+## 🚀 Deploy com Docker
+
+1. **Pré-requisitos:** Docker e Docker Compose instalados
+2. **Clone o repositório e configure o `.env`**
+3. **Suba os containers:**
+   ```bash
+   docker compose up --build
+   ```
+4. **Acesse a API:**  
+   [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+
+
+---
+
+## 📂 Estrutura do Projeto
 
 ```
 .
 ├── alembic/                # Migrações do banco de dados
-│   ├── versions/           # Arquivos de versões das migrações
-│   ├── env.py
-│   ├── README
-│   ├── script.py.mako
 ├── app/
-│   ├── api/
-│   │   └── v1/
-│   │       └── routes/
-│   │           ├── __init__.py
-│   │           ├── auth.py
-│   │           ├── clients.py
-│   │           ├── orders.py
-│   │           └── products.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── dependencies.py
-│   │   └── security.py
-│   ├── crud/
-│   │   ├── __init__.py
-│   │   ├── clients.py
-│   │   ├── orders.py
-│   │   ├── products.py
-│   │   └── user.py
-│   ├── db/
-│   │   ├── models/
-│   │   │   ├── __init__.py
-│   │   │   ├── client.py
-│   │   │   ├── orders.py
-│   │   │   ├── products.py
-│   │   │   └── user.py
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── session.py
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── client.py
-│   │   ├── orders.py
-│   │   ├── products.py
-│   │   └── user.py
-│   ├── services/
-│   │   └── whatsapp.py
-│   ├── main.py
-│   └── startup.py
+│   ├── api/v1/routes/      # Endpoints da API
+│   ├── core/               # Configurações, segurança, dependências
+│   ├── crud/               # Operações de banco (CRUD)
+│   ├── db/                 # Models e sessão do banco
+│   ├── schemas/            # Schemas Pydantic
+│   ├── services/           # Integrações externas (WhatsApp)
+│   ├── main.py             # Entrypoint FastAPI
+│   └── startup.py          # Inicialização customizada
 ├── tests/                  # Testes automatizados
-├── .env.example            # Exemplo de variáveis de ambiente
-├── .gitattributes
-├── .gitignore
-├── alembic.ini             # Configuração do Alembic
-├── pytest.ini              # Configuração do Pytest
-├── README.md
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
 ---
 
-## Variáveis de Ambiente
+## ⚙️ Variáveis de Ambiente
 
-| Variável                | Descrição                                 | Exemplo                                  |
-|------------------------ |-------------------------------------------|------------------------------------------|
-| DATABASE_URL            | URL de conexão com o banco PostgreSQL     | postgresql+asyncpg://postgres:postgres@db:5432/luestilo |
-| SECRET_KEY              | Chave secreta para JWT                    | sua_chave_secreta                        |
-| ADMIN_EMAIL             | Email do admin inicial                    | admin@luestilo.com                       |
-| ADMIN_PASSWORD          | Senha do admin inicial                    | admin123                                 |
-| WHATSAPP_INSTANCE_ID    | Instance ID do UltraMsg                   | instance123456                           |
-| WHATSAPP_TOKEN          | Token do UltraMsg                         | seu_token_ultramsg                       |
-| SENTRY_DSN              | DSN do Sentry (opcional)                  | https://...sentry.io/...                  |
+Veja o arquivo `.env.example` para todos os parâmetros necessários.
 
 ---
 
-## Observações
+## 📊 Critérios de Avaliação
 
-- **Usuários autenticados** (admin ou não) podem criar pedidos.
-- **Pedidos** sempre pertencem a um cliente (`client_id`).
-- **Admins** podem criar pedidos para qualquer cliente; usuários comuns só para si mesmos.
-- O envio de mensagens WhatsApp utiliza a API UltraMsg (fácil integração e plano gratuito para testes).
-- O projeto segue boas práticas de arquitetura, validação, tratamento de erros e documentação.
-- **Login:** Use seu e-mail no campo `username` ao autenticar.
+- **Funcionalidade:** A API atende aos requisitos?
+- **Código:** Organização, legibilidade e boas práticas.
+- **Documentação:** Clareza e completude.
+- **Testes:** Cobertura e qualidade.
+- **Deploy:** Docker configurado corretamente.
 
 ---
 
+## 🔗 Links úteis
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Pytest Documentation](https://docs.pytest.org/)
+- [Docker Documentation](https://docs.docker.com/)
+- [UltraMsg API](https://ultramsg.com/)
+- [GitHub](https://github.com/)
+
+---
+
+> Dúvidas ou sugestões? Abra uma issue ou entre em contato!
 ## Autor
 
 Desenvolvido por [Raquel](https://github.com/raquel-brito).
