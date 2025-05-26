@@ -16,3 +16,4 @@ httpx
 requests
 sentry-sdk
 python-multipart
+bcrypt>=4.0.1

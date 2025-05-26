@@ -1,15 +1,30 @@
-venv/
-ENV/
-env/
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.vscode/
+*.env
 .env
-*.log
+.env.*
+venv/
+ENV/
+env/
+*.sqlite3
+
+# VSCode
+.vscode/
+
+# Alembic
 alembic/versions/*.pyc
+
+# Docker
+*.log
+pgdata/
 *.db
-*.pid
+
+# Pytest
+.cache/
+.pytest_cache/
+
+# Outros
 .DS_Store
-Thumbs.db

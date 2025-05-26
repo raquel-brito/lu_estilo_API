@@ -4,7 +4,7 @@ class ClientBase(BaseModel):
     name: str= Field(example="Maria da Silva")
     email: EmailStr = Field(example="maria@cliente.com")
     cpf: str = Field(min_length=11, max_length=11, pattern=r"^\d{11}$", example="12345678900")  # CPF com 11 dígitos numéricos
-    phone: str | None = None
+    phone: str = Field(None, example="+5511999998888")  # Telefone com código do país
 
 @validator("phone")
 def validate_phone(cls, v):
@@ -22,4 +22,4 @@ class ClientOut(ClientBase):
     id: int = Field(example=1)
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}

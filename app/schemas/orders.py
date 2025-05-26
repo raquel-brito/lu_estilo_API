@@ -31,4 +31,4 @@ class OrderOut(BaseModel):
     items: List[OrderItemOut]
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}

@@ -23,4 +23,4 @@ class ProductOut(ProductBase):
     id: int = Field(example=1)
 
     class Config:
-        orm_mode = True
+        model_config = {"from_attributes": True}
