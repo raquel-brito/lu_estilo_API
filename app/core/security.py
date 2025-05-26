@@ -23,14 +23,14 @@ def create_access_token(
     is_admin: bool,
     expires_delta: Optional[timedelta] = None
 ) -> str:
+    """Gera um token JWT de acesso."""
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     scopes = ["admin"] if is_admin else ["user"]
-    
+
     to_encode = {
         "sub": email,
         "scopes": scopes,
         "exp": expire
     }
 
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

@@ -31,3 +31,10 @@ class UserOut(UserBase):
 
     class Config:
         from_attributes = True
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+
+class LoginRequest(BaseModel):
+    email: EmailStr = Field(example="usuario@teste.com")
+    password: str = Field(example="senha123")

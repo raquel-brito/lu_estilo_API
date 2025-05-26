@@ -4,6 +4,7 @@ from alembic import context
 from app.db.base import Base  
 from app.db.models.user import User
 from app.core.config import settings
+from app.db import models
 
 config = context.config
 

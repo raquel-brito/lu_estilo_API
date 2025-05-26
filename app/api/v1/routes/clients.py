@@ -1,23 +1,58 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Security
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Security, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from typing import List, Optional
 
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db, get_current_active_admin
 from app.db.models.user import User
 from app.schemas.client import ClientCreate, ClientOut, ClientUpdate
 from app.crud import clients as crud_clients
 
-
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ClientOut])
+@router.get(
+    "/",
+    response_model=List[ClientOut],
+    responses={
+        200: {
+            "description": "Lista de clientes",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": 1,
+                            "name": "Maria Silva",
+                            "email": "maria@email.com",
+                            "cpf": "12345678900"
+                        }
+                    ]
+                }
+            }
+        },
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["query", "limit"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def list_clients(
     *,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_admin),
     skip: int = 0,
     limit: int = 10,
     name: Optional[str] = Query(None, alias="nome"),
@@ -26,11 +61,66 @@ async def list_clients(
     return await crud_clients.get_clients(db, skip, limit, name, email)
 
 
-@router.post("/", response_model=ClientOut)
+@router.post(
+    "/",
+    response_model=ClientOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {
+            "description": "Cliente criado com sucesso",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 2,
+                        "name": "João Souza",
+                        "email": "joao@email.com",
+                        "cpf": "98765432100"
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Email ou CPF já registrado",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Email já registrado"}
+                }
+            }
+        },
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "email"],
+                                "msg": "field required",
+                                "type": "value_error.missing"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def create_client(
-    client_in: ClientCreate,
+    client_in: ClientCreate = Body(
+        ...,
+        examples={
+            "default": {
+                "summary": "Exemplo de criação de cliente",
+                "value": {
+                    "name": "João Souza",
+                    "email": "joao@email.com",
+                    "cpf": "98765432100"
+                }
+            }
+        }
+    ),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Security(get_current_user, scopes=["admin"])
+    current_user: User = Security(get_current_active_admin, scopes=["admin"])
 ):
     if await crud_clients.get_client_by_email(db, client_in.email):
         raise HTTPException(status_code=400, detail="Email já registrado")
@@ -40,12 +130,47 @@ async def create_client(
     return await crud_clients.create_client(db, client_in)
 
 
-@router.get("/{id}", response_model=ClientOut)
+@router.get(
+    "/{id}",
+    response_model=ClientOut,
+    responses={
+        200: {
+            "description": "Detalhes do cliente",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "name": "Maria Silva",
+                        "email": "maria@email.com",
+                        "cpf": "12345678900"
+                    }
+                }
+            }
+        },
+        404: {"description": "Cliente não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "id"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_client(
     *,
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_admin)
 ):
     client = await crud_clients.get_client_by_id(db, id)
     if not client:
@@ -53,13 +178,68 @@ async def get_client(
     return client
 
 
-@router.put("/{id}", response_model=ClientOut)
+@router.put(
+    "/{id}",
+    response_model=ClientOut,
+    responses={
+        200: {
+            "description": "Cliente atualizado com sucesso",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "name": "Maria Silva",
+                        "email": "maria@email.com",
+                        "cpf": "12345678900"
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Email ou CPF já registrado",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "CPF já registrado"}
+                }
+            }
+        },
+        404: {"description": "Cliente não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "cpf"],
+                                "msg": "field required",
+                                "type": "value_error.missing"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def update_client(
     *,
     id: int,
-    client_in: ClientUpdate,
+    client_in: ClientUpdate = Body(
+        ...,
+        examples={
+            "default": {
+                "summary": "Exemplo de atualização de cliente",
+                "value": {
+                    "name": "Maria Silva",
+                    "email": "maria@email.com",
+                    "cpf": "12345678900"
+                }
+            }
+        }
+    ),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_admin)
 ):
     client = await crud_clients.get_client_by_id(db, id)
     if not client:
@@ -75,12 +255,35 @@ async def update_client(
     return await crud_clients.update_client(db, client, client_in)
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        204: {"description": "Cliente deletado com sucesso"},
+        404: {"description": "Cliente não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "id"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
 async def delete_client(
     *,
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_admin)
 ):
     client = await crud_clients.get_client_by_id(db, id)
     if not client:

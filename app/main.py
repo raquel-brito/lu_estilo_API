@@ -3,7 +3,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 sentry_sdk.init(
     dsn="https://80339ee9bb46069fe6e11337f4279ff8@o4509382887538688.ingest.us.sentry.io/4509382907592704",
-    traces_sample_rate=1.0  # taxa para performance (pode ajustar depois)
+    traces_sample_rate=1.0  # Ajuste a taxa de amostragem conforme necessário
 )
 
 from fastapi import FastAPI

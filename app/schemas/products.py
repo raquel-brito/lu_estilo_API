@@ -20,7 +20,7 @@ class ProductUpdate(ProductBase):
     pass
 
 class ProductOut(ProductBase):
-    id: int = Field(..., example=1)
+    id: int = Field(example=1)
 
     class Config:
         orm_mode = True

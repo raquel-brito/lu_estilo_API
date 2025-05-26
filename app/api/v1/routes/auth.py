@@ -1,89 +1,284 @@
-from datetime import timedelta
-
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Security
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-from sqlalchemy.exc import IntegrityError
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from typing import Optional, List
+from datetime import datetime
 
-from app.core.config import settings
-from app.core.dependencies import get_current_user
-from app.core.security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.core.security import get_password_hash as hash_password
-from app.crud.user import crud_user
-from app.db.models.user import User
-from app.db.session import get_db
-from app.schemas.user import UserCreate, UserOut
+from app.core.dependencies import get_db, get_current_active_user, get_current_active_admin
+from app.schemas.orders import OrderCreate, OrderOut, OrderUpdate
+from app.crud import orders as crud_orders
 
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = "HS256"
+router = APIRouter(tags=["orders"])
 
 
-router = APIRouter()
-
-
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    existing_user = await crud_user.get_by_email(db, email=user_in.email)
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email já registrado"
-        )
-    try:
-        user = await crud_user.create(db, user_in=user_in)
-        return user
-    except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email já registrado"
-        )
-
-
-@router.post("/login")
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db),
-):
-    user = await crud_user.get_by_email(db, email=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuário ou senha incorretos"
-        )
-
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        email=user.email,
-        is_admin=user.is_admin,
-        expires_delta=access_token_expires
+@router.post(
+    "/",
+    response_model=OrderOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        201: {
+            "description": "Pedido criado com sucesso",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "user_id": 2,
+                        "status": "Pendente",
+                        "items": [
+                            {
+                                "product_id": 10,
+                                "quantity": 2,
+                                "price": 99.90
+                            }
+                        ],
+                        "created_at": "2024-05-26T15:00:00"
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "items"],
+                                "msg": "field required",
+                                "type": "value_error.missing"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
 )
+async def create_order(
+    order: OrderCreate = Body(
+        ...,
+        examples={
+            "default": {
+                "summary": "Exemplo de criação de pedido",
+                "value": {
+                    "items": [
+                        {"product_id": 10, "quantity": 2}
+                    ]
+                }
+            }
+        }
+    ),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    return await crud_orders.create_order(db, order, user_id=current_user.id)
 
 
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.get(
+    "/",
+    response_model=List[OrderOut],
+    responses={
+        200: {
+            "description": "Lista de pedidos",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": 1,
+                            "user_id": 2,
+                            "status": "Pendente",
+                            "items": [
+                                {
+                                    "product_id": 10,
+                                    "quantity": 2,
+                                    "price": 99.90
+                                }
+                            ],
+                            "created_at": "2024-05-26T15:00:00"
+                        }
+                    ]
+                }
+            }
+        },
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["query", "order_id"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
+async def list_orders(
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    section: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    order_id: Optional[int] = Query(None),
+):
+    client_id = None if current_user.is_admin else current_user.id
+    return await crud_orders.list_orders(
+        db,
+        client_id=client_id,
+        start_date=start_date,
+        end_date=end_date,
+        section=section,
+        status=status,
+        order_id=order_id,
+    )
 
 
-@router.post("/refresh-token")
-async def refresh_token(request: Request):
-    token = await request.json()
-    old_token = token.get("refresh_token")
-    if not old_token:
-        raise HTTPException(status_code=400, detail="Refresh token não fornecido")
+@router.get(
+    "/{order_id}",
+    response_model=OrderOut,
+    responses={
+        200: {
+            "description": "Detalhes do pedido",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "user_id": 2,
+                        "status": "Pendente",
+                        "items": [
+                            {
+                                "product_id": 10,
+                                "quantity": 2,
+                                "price": 99.90
+                            }
+                        ],
+                        "created_at": "2024-05-26T15:00:00"
+                    }
+                }
+            }
+        },
+        404: {"description": "Pedido não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "order_id"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_order(
+    order_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    order = await crud_orders.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    if not current_user.is_admin and order.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Não autorizado a acessar este pedido")
+    return order
 
-    try:
-        payload = jwt.decode(old_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        if not username:
-            raise HTTPException(status_code=401, detail="Token inválido")
 
-        new_access_token = create_access_token(data={"sub": username}, expires_delta=timedelta(minutes=60))
-        return {"access_token": new_access_token, "token_type": "bearer"}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
+@router.put(
+    "/{order_id}",
+    response_model=OrderOut,
+    responses={
+        200: {
+            "description": "Pedido atualizado com sucesso",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": 1,
+                        "user_id": 2,
+                        "status": "Enviado",
+                        "items": [
+                            {
+                                "product_id": 10,
+                                "quantity": 2,
+                                "price": 99.90
+                            }
+                        ],
+                        "created_at": "2024-05-26T15:00:00"
+                    }
+                }
+            }
+        },
+        404: {"description": "Pedido não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "status"],
+                                "msg": "field required",
+                                "type": "value_error.missing"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
+async def update_order(
+    order_id: int,
+    order_update: OrderUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_active_admin),
+):
+    order = await crud_orders.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    return await crud_orders.update_order(db, order_id, order_update)
 
 
-@router.get("/me", response_model=UserOut)
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
+@router.delete(
+    "/{order_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        204: {"description": "Pedido deletado com sucesso"},
+        404: {"description": "Pedido não encontrado"},
+        422: {
+            "description": "Erro de validação",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "order_id"],
+                                "msg": "value is not a valid integer",
+                                "type": "type_error.integer"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+)
+async def delete_order(
+    order_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_active_admin),
+):
+    order = await crud_orders.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    await crud_orders.delete_order(db, order_id)
