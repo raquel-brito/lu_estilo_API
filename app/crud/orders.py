@@ -1,5 +1,4 @@
-from fastapi import HTTPException, status, Depends
-
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -11,9 +10,8 @@ from datetime import datetime
 from app.db.models.orders import Order, OrderItem
 from app.db.models.products import Product
 from app.schemas.orders import OrderCreate, OrderItemCreate, OrderUpdate
-from app.core.dependencies import get_current_active_admin
 
-async def create_order(db: AsyncSession, order_create: OrderCreate, user_id: int):
+async def create_order(db: AsyncSession, order_create: OrderCreate, client_id: int):
     order_items = []
 
     for item in order_create.items:
@@ -32,21 +30,17 @@ async def create_order(db: AsyncSession, order_create: OrderCreate, user_id: int
         product.stock -= item.quantity
         order_items.append(OrderItem(product_id=product.id, quantity=item.quantity, price=product.price))
 
-    order = Order(user_id=user_id, status="Pendente", items=order_items)
+    order = Order(client_id=client_id, status="Pendente", items=order_items)
 
     db.add(order)
     await db.commit()
-
-    
     await db.refresh(order)
 
-    
     stmt = select(Order).options(joinedload(Order.items)).where(Order.id == order.id)
     result = await db.execute(stmt)
     created_order = result.unique().scalar_one()
 
     return created_order
-
 
 async def get_order(db: AsyncSession, order_id: int):
     stmt = select(Order).options(joinedload(Order.items)).where(Order.id == order_id)
@@ -55,7 +49,6 @@ async def get_order(db: AsyncSession, order_id: int):
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     return order
-
 
 async def list_orders(
     db,
@@ -70,12 +63,12 @@ async def list_orders(
     filters = []
 
     if client_id is not None:
-        filters.append(Order.user_id == client_id)
+        filters.append(Order.client_id == client_id)
     if start_date:
         filters.append(Order.created_at >= start_date)
     if end_date:
         filters.append(Order.created_at <= end_date)
-    if section:
+    if section and hasattr(Order, "section"):
         filters.append(Order.section == section)
     if status:
         filters.append(Order.status == status)
@@ -87,7 +80,6 @@ async def list_orders(
 
     result = await db.execute(query)
     return result.unique().scalars().all()
-
 
 async def update_order(db: AsyncSession, order_id: int, order_update: OrderUpdate):
     stmt = select(Order).options(joinedload(Order.items)).where(Order.id == order_id)
@@ -102,7 +94,6 @@ async def update_order(db: AsyncSession, order_id: int, order_update: OrderUpdat
     await db.commit()
     await db.refresh(order)
     return order
-
 
 async def delete_order(db: AsyncSession, order_id: int):
     result = await db.execute(select(Order).where(Order.id == order_id))

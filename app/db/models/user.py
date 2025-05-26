@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -12,5 +12,6 @@ class User(Base):
     is_active = Column(Boolean, default=True)  
     is_admin = Column(Boolean, default=False)
 
-    orders = relationship("Order", back_populates="user")
-     
+    
+    
+ 

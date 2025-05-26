@@ -6,9 +6,10 @@ from datetime import datetime
 from app.core.dependencies import get_db, get_current_active_user, get_current_active_admin
 from app.schemas.orders import OrderCreate, OrderOut, OrderUpdate
 from app.crud import orders as crud_orders
+from app.crud import clients as crud_clients
+from app.services.whatsapp import send_whatsapp_message
 
 router = APIRouter(tags=["orders"])
-
 
 @router.post(
     "/",
@@ -17,9 +18,8 @@ router = APIRouter(tags=["orders"])
     summary="Criar um novo pedido",
     description=(
         "Cria um novo pedido para o usuário autenticado. "
-        "O pedido pode conter múltiplos produtos. "
-        "O estoque de cada produto é validado antes da confirmação. "
-        "Apenas usuários autenticados podem criar pedidos."
+        "Admins podem criar pedidos para qualquer cliente informando client_id. "
+        "Usuários comuns só podem criar pedidos para si mesmos."
     ),
     responses={
         201: {
@@ -28,7 +28,7 @@ router = APIRouter(tags=["orders"])
                 "application/json": {
                     "example": {
                         "id": 1,
-                        "user_id": 2,
+                        "client_id": 2,
                         "status": "Pendente",
                         "items": [
                             {
@@ -69,7 +69,8 @@ async def create_order(
                 "value": {
                     "items": [
                         {"product_id": 10, "quantity": 2}
-                    ]
+                    ],
+                    "client_id": 1  # Exemplo para admin
                 }
             }
         }
@@ -77,8 +78,24 @@ async def create_order(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
-    return await crud_orders.create_order(db, order, user_id=current_user.id)
+    # Admin pode criar pedido para qualquer cliente
+    if current_user.is_admin:
+        if not order.client_id:
+            raise HTTPException(status_code=400, detail="client_id é obrigatório para admin")
+        client_id = order.client_id
+    else:
+        # Usuário comum só pode criar pedido para si mesmo
+        client_id = current_user.id
 
+    new_order = await crud_orders.create_order(db, order, client_id=client_id)
+    # Busca o cliente para pegar o telefone
+    client = await crud_clients.get_client_by_id(db, client_id)
+    if client and hasattr(client, "phone") and client.phone:
+        send_whatsapp_message(
+            to_number=client.phone,
+            message=f"Olá {client.name}, seu pedido {new_order.id} foi recebido com sucesso!"
+        )
+    return new_order
 
 @router.get(
     "/",
@@ -97,7 +114,7 @@ async def create_order(
                     "example": [
                         {
                             "id": 1,
-                            "user_id": 2,
+                            "client_id": 2,
                             "status": "Pendente",
                             "items": [
                                 {
@@ -150,7 +167,6 @@ async def list_orders(
         order_id=order_id,
     )
 
-
 @router.get(
     "/{order_id}",
     response_model=OrderOut,
@@ -167,7 +183,7 @@ async def list_orders(
                 "application/json": {
                     "example": {
                         "id": 1,
-                        "user_id": 2,
+                        "client_id": 2,
                         "status": "Pendente",
                         "items": [
                             {
@@ -208,10 +224,9 @@ async def get_order(
     order = await crud_orders.get_order(db, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
-    if not current_user.is_admin and order.user_id != current_user.id:
+    if not current_user.is_admin and order.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="Não autorizado a acessar este pedido")
     return order
-
 
 @router.put(
     "/{order_id}",
@@ -228,7 +243,7 @@ async def get_order(
                 "application/json": {
                     "example": {
                         "id": 1,
-                        "user_id": 2,
+                        "client_id": 2,
                         "status": "Enviado",
                         "items": [
                             {
@@ -271,7 +286,6 @@ async def update_order(
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     return await crud_orders.update_order(db, order_id, order_update)
-
 
 @router.delete(
     "/{order_id}",

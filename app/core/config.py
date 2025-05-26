@@ -8,9 +8,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str  
     admin_email: str      
     admin_password: str   
+    WHATSAPP_INSTANCE_ID: str
+    WHATSAPP_TOKEN: str
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
-# 

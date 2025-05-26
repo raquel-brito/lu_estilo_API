@@ -7,6 +7,10 @@ import uuid
 @pytest.mark.asyncio
 async def test_create_product():
     async with async_session() as session:
+        # Limpeza antes do teste
+        await session.execute("DELETE FROM products")
+        await session.commit()
+
         # Arrange
         product_data = {
             "description": "Descrição do produto teste",
