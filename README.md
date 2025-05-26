@@ -2,7 +2,7 @@
 
 > 💡 **Acesse a API agora:**
 >
-> - **Produção (Fly.io):** [https://lu-estilo-api-misty-frost-2101.fly.dev/docs](https://lu-estilo-api-misty-frost-2101.fly.dev/)
+> - **Produção (Fly.io):** [https://lu-estilo-api-misty-frost-2101.fly.dev/](https://lu-estilo-api-misty-frost-2101.fly.dev/)
 > - **Docker local:** [http://localhost:8000/docs](http://localhost:8000/)
 > - **Ambiente local (sem Docker):** [http://localhost:8000/docs](http://localhost:8000/)
 >
