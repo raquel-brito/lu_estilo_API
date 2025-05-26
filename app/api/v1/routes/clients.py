@@ -15,6 +15,12 @@ router = APIRouter()
 @router.get(
     "/",
     response_model=List[ClientOut],
+    summary="Listar clientes",
+    description=(
+        "Lista todos os clientes cadastrados no sistema. "
+        "Apenas administradores podem acessar esta rota. "
+        "Suporta paginação e filtros por nome e email."
+    ),
     responses={
         200: {
             "description": "Lista de clientes",
@@ -65,6 +71,12 @@ async def list_clients(
     "/",
     response_model=ClientOut,
     status_code=status.HTTP_201_CREATED,
+    summary="Criar novo cliente",
+    description=(
+        "Cria um novo cliente no sistema. "
+        "Valida se o email e o CPF são únicos. "
+        "Apenas administradores podem criar clientes."
+    ),
     responses={
         201: {
             "description": "Cliente criado com sucesso",
@@ -133,6 +145,11 @@ async def create_client(
 @router.get(
     "/{id}",
     response_model=ClientOut,
+    summary="Obter detalhes de um cliente",
+    description=(
+        "Retorna os detalhes de um cliente específico pelo ID. "
+        "Apenas administradores podem acessar esta rota."
+    ),
     responses={
         200: {
             "description": "Detalhes do cliente",
@@ -181,6 +198,12 @@ async def get_client(
 @router.put(
     "/{id}",
     response_model=ClientOut,
+    summary="Atualizar um cliente",
+    description=(
+        "Atualiza as informações de um cliente específico. "
+        "Valida se o novo email ou CPF já estão cadastrados. "
+        "Apenas administradores podem atualizar clientes."
+    ),
     responses={
         200: {
             "description": "Cliente atualizado com sucesso",
@@ -258,6 +281,11 @@ async def update_client(
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    summary="Excluir um cliente",
+    description=(
+        "Exclui um cliente do sistema pelo ID. "
+        "Apenas administradores podem excluir clientes."
+    ),
     responses={
         204: {"description": "Cliente deletado com sucesso"},
         404: {"description": "Cliente não encontrado"},

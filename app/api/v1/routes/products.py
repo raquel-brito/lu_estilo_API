@@ -12,6 +12,12 @@ router = APIRouter(tags=["products"])
 @router.get(
     "/",
     response_model=List[ProductOut],
+    summary="Listar produtos",
+    description=(
+        "Lista todos os produtos cadastrados. "
+        "Usuários autenticados podem visualizar. "
+        "Suporta paginação e pode ser expandido para filtros por categoria, preço e disponibilidade."
+    ),
     responses={
         200: {
             "description": "Lista de produtos",
@@ -60,6 +66,12 @@ async def read_products(
     "/",
     response_model=ProductOut,
     status_code=status.HTTP_201_CREATED,
+    summary="Criar novo produto",
+    description=(
+        "Cria um novo produto no sistema. "
+        "Apenas administradores podem criar produtos. "
+        "É possível informar descrição, valor de venda, código de barras, seção, estoque inicial, data de validade e imagens."
+    ),
     responses={
         201: {
             "description": "Produto criado com sucesso",
@@ -117,6 +129,11 @@ async def create_product(
 @router.get(
     "/{product_id}",
     response_model=ProductOut,
+    summary="Obter detalhes de um produto",
+    description=(
+        "Retorna os detalhes de um produto específico pelo ID. "
+        "Usuários autenticados podem visualizar."
+    ),
     responses={
         200: {
             "description": "Detalhes do produto",
@@ -165,6 +182,11 @@ async def read_product(
 @router.put(
     "/{product_id}",
     response_model=ProductOut,
+    summary="Atualizar um produto",
+    description=(
+        "Atualiza as informações de um produto específico. "
+        "Apenas administradores podem atualizar produtos."
+    ),
     responses={
         200: {
             "description": "Produto atualizado com sucesso",
@@ -227,6 +249,11 @@ async def update_product(
 @router.delete(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    summary="Excluir um produto",
+    description=(
+        "Exclui um produto do sistema pelo ID. "
+        "Apenas administradores podem excluir produtos."
+    ),
     responses={
         204: {"description": "Produto deletado com sucesso"},
         404: {"description": "Produto não encontrado"},

@@ -14,6 +14,13 @@ router = APIRouter(tags=["orders"])
     "/",
     response_model=OrderOut,
     status_code=status.HTTP_201_CREATED,
+    summary="Criar um novo pedido",
+    description=(
+        "Cria um novo pedido para o usuário autenticado. "
+        "O pedido pode conter múltiplos produtos. "
+        "O estoque de cada produto é validado antes da confirmação. "
+        "Apenas usuários autenticados podem criar pedidos."
+    ),
     responses={
         201: {
             "description": "Pedido criado com sucesso",
@@ -76,6 +83,12 @@ async def create_order(
 @router.get(
     "/",
     response_model=List[OrderOut],
+    summary="Listar pedidos",
+    description=(
+        "Lista todos os pedidos. "
+        "Admins podem ver todos os pedidos e filtrar por período, seção, status, id do pedido e cliente. "
+        "Usuários autenticados só veem seus próprios pedidos."
+    ),
     responses={
         200: {
             "description": "Lista de pedidos",
@@ -120,11 +133,11 @@ async def create_order(
 async def list_orders(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_active_user),
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    section: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    order_id: Optional[int] = Query(None),
+    start_date: Optional[datetime] = Query(None, description="Filtrar pedidos a partir desta data"),
+    end_date: Optional[datetime] = Query(None, description="Filtrar pedidos até esta data"),
+    section: Optional[str] = Query(None, description="Filtrar por seção do produto"),
+    status: Optional[str] = Query(None, description="Filtrar por status do pedido"),
+    order_id: Optional[int] = Query(None, description="Filtrar por ID do pedido"),
 ):
     client_id = None if current_user.is_admin else current_user.id
     return await crud_orders.list_orders(
@@ -141,6 +154,12 @@ async def list_orders(
 @router.get(
     "/{order_id}",
     response_model=OrderOut,
+    summary="Obter detalhes de um pedido",
+    description=(
+        "Retorna os detalhes de um pedido específico. "
+        "Admins podem acessar qualquer pedido. "
+        "Usuários autenticados só podem acessar seus próprios pedidos."
+    ),
     responses={
         200: {
             "description": "Detalhes do pedido",
@@ -197,6 +216,11 @@ async def get_order(
 @router.put(
     "/{order_id}",
     response_model=OrderOut,
+    summary="Atualizar um pedido",
+    description=(
+        "Atualiza as informações de um pedido específico, incluindo o status. "
+        "Apenas administradores podem atualizar pedidos."
+    ),
     responses={
         200: {
             "description": "Pedido atualizado com sucesso",
@@ -252,6 +276,11 @@ async def update_order(
 @router.delete(
     "/{order_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    summary="Excluir um pedido",
+    description=(
+        "Exclui um pedido específico. "
+        "Apenas administradores podem excluir pedidos."
+    ),
     responses={
         204: {"description": "Pedido deletado com sucesso"},
         404: {"description": "Pedido não encontrado"},
