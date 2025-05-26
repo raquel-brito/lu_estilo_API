@@ -156,7 +156,7 @@ Mais informações: [https://sentry.io/for/python/](https://sentry.io/for/python
 
 ## 🚀 Deploy com Docker
 
-1. **Pré-requisitos:** Docker e Docker Compose instalados
+1. **Pré-requisitos:** Docker e Docker-Compose instalados
 2. **Clone o repositório e configure o `.env`**
 3. **Suba os containers:**
    ```bash
@@ -197,7 +197,24 @@ Mais informações: [https://sentry.io/for/python/](https://sentry.io/for/python
 
 ## ⚙️ Variáveis de Ambiente
 
-Veja o arquivo `.env.example` para todos os parâmetros necessários.
+Para rodar o projeto, é necessário criar um arquivo `.env` na raiz do projeto com base no arquivo `.env.example`.  
+O arquivo `.env.example` contém todos os parâmetros necessários, como configurações do banco de dados, credenciais de admin, DSN do Sentry, entre outros.
+
+**Passos:**
+1. Copie o arquivo de exemplo:
+   ```bash
+   cp .env.example .env
+   ```
+   Ou crie manualmente um novo arquivo `.env` e preencha os campos conforme o `.env.example`.
+
+2. Preencha as variáveis obrigatórias, como:
+   - `DATABASE_URL`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
+   - `SENTRY_DSN` (opcional, para monitoramento de erros)
+   - Outras variáveis conforme necessidade do projeto
+
+> **Importante:** Nunca compartilhe seu `.env` real publicamente, pois ele pode conter informações sensíveis.
 
 ---
 
